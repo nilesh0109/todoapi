@@ -26,6 +26,22 @@ Array.prototype.removeEleById = function(id) {
     });
 }
 
+Array.prototype.getIndexOfEle = function(id) {
+    var ind=-1;
+	this.filter(function(v,index) {
+		if(v.id == parseInt(id)){
+			ind= index;
+		}    
+	 return v.id == parseInt(id);
+    });
+	return ind;
+}
+
+Array.prototype.updateEleById = function(ele) {
+	console.log(this.getIndexOfEle(ele.id));
+   this[this.getIndexOfEle(ele.id)] = ele;
+}
+
 app.use(bodyparser.json());
 
 app.get('/', function(req, res) {
@@ -39,7 +55,7 @@ app.get('/todos', function(req, res) {
     res.json(todos);
 });
 
-app.get('/todo/:id', function(req, res) {
+app.get('/todos/:id', function(req, res) {
     var ele = todos.getEleById(req.params.id);
     if (ele)
         res.json(ele);
@@ -50,13 +66,17 @@ app.get('/todo/:id', function(req, res) {
 // POST todos
 app.post('/todos', function(req, res) {
     var body = req.body;
-    body.id = nextItemId++;
-    todos.push(body);
-    res.json(body.id);
+    var item = {
+		'id' : nextItemId++,
+		'description': body.description,
+		'completed': body.completed
+		};
+    todos.push(item);
+    res.json(item.id);
 });
 
 // DELETE todos
-app.delete('/todo/:id', function(req, res) {
+app.delete('/todos/:id', function(req, res) {
 
     var len = todos.length;
     todos = todos.removeEleById(req.params.id);
@@ -64,6 +84,24 @@ app.delete('/todo/:id', function(req, res) {
 		res.json('item not found');
 	else
 		res.json('item with id '+req.params.id+' is removed');
+});
+// UPDATE todos
+app.put('/todos/:id', function(req, res) {
+
+    var ele = todos.getEleById(req.params.id);
+	if(ele)
+	{
+		var body = req.body;	
+		var ele = {
+			'id' :parseInt(req.params.id),
+			'description': body.description,
+			'completed': body.completed
+		}
+		todos.updateEleById(ele);
+		res.json('item with id '+req.params.id+' is updated');
+	}
+	else
+		res.json('item with id '+req.params.id+' is not found');
 });
 
 app.listen(PORT, function() {
