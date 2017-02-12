@@ -20,6 +20,12 @@ Array.prototype.getEleById = function(id) {
     })[0];
 }
 
+Array.prototype.removeEleById = function(id) {
+    return this.filter(function(v) {
+        return v.id !== parseInt(id);
+    });
+}
+
 app.use(bodyparser.json());
 
 app.get('/', function(req, res) {
@@ -35,23 +41,30 @@ app.get('/todos', function(req, res) {
 
 app.get('/todo/:id', function(req, res) {
     var ele = todos.getEleById(req.params.id);
-    console.log(ele);
     if (ele)
         res.json(ele);
     else
         res.status(404).send();
 });
 
+// POST todos
 app.post('/todos', function(req, res) {
     var body = req.body;
-
     body.id = nextItemId++;
     todos.push(body);
     res.json(body.id);
 });
 
-// GET Todo request /
-//  get/todo:id
+// DELETE todos
+app.delete('/todo/:id', function(req, res) {
+
+    var len = todos.length;
+    todos = todos.removeEleById(req.params.id);
+	if(todos.length === len )
+		res.json('item not found');
+	else
+		res.json('item with id '+req.params.id+' is removed');
+});
 
 app.listen(PORT, function() {
     console.log('Express is listening to port ' + PORT);
