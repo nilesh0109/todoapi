@@ -62,16 +62,15 @@ app.get('/', function(req, res) {
 //  get/todos
 
 app.get('/todos', function(req, res) {
-	var eles=[];   
+	var eles=todos;   
    debugger;
    if(req.query.hasOwnProperty('completed')){
 	eles = todos.getEleByProp('completed',req.query.completed);	
 	}
-	else if(req.query.hasOwnProperty('description')){
-	eles = todos.getEleByProp('description',req.query.description);	
-	}
-	else{
-	eles = todos;	
+	 if(req.query.hasOwnProperty('q')){
+		eles = eles.filter(function(elem){
+			return elem.description.indexOf(req.query.q) > -1;
+		});
 	}
     if (eles && eles.length > 0)
         res.json(eles);
