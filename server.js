@@ -11,6 +11,11 @@ var todos = [{
     id: 2,
     description: 'Go to market today',
     completed: false
+},
+ {
+    id: 3,
+    description: 'walk the dog',
+    completed: true
 }];
 todos = [];
 
@@ -18,6 +23,12 @@ Array.prototype.getEleById = function(id) {
     return this.filter(function(v) {
         return v.id === parseInt(id);
     })[0];
+}
+
+Array.prototype.getEleByProp = function(prop,val) {
+    return this.filter(function(v) {
+		return v[prop].toString() === val;
+    });
 }
 
 Array.prototype.removeEleById = function(id) {
@@ -38,7 +49,6 @@ Array.prototype.getIndexOfEle = function(id) {
 }
 
 Array.prototype.updateEleById = function(ele) {
-	console.log(this.getIndexOfEle(ele.id));
    this[this.getIndexOfEle(ele.id)] = ele;
 }
 
@@ -52,7 +62,21 @@ app.get('/', function(req, res) {
 //  get/todos
 
 app.get('/todos', function(req, res) {
-    res.json(todos);
+	var eles=[];   
+   debugger;
+   if(req.query.hasOwnProperty('completed')){
+	eles = todos.getEleByProp('completed',req.query.completed);	
+	}
+	else if(req.query.hasOwnProperty('description')){
+	eles = todos.getEleByProp('description',req.query.description);	
+	}
+	else{
+	eles = todos;	
+	}
+    if (eles && eles.length > 0)
+        res.json(eles);
+    else
+        res.status(404).send();
 });
 
 app.get('/todos/:id', function(req, res) {
@@ -62,6 +86,7 @@ app.get('/todos/:id', function(req, res) {
     else
         res.status(404).send();
 });
+
 
 // POST todos
 app.post('/todos', function(req, res) {
