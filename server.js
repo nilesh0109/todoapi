@@ -1,5 +1,6 @@
 var express = require('express');
 var bodyparser = require('body-parser');
+var db = require('./db.js');
 var app = express();
 var PORT = process.env.PORT || 3002;
 var nextItemId = 1;
@@ -11,8 +12,7 @@ var todos = [{
     id: 2,
     description: 'Go to market today',
     completed: false
-},
- {
+}, {
     id: 3,
     description: 'walk the dog',
     completed: true
@@ -25,9 +25,9 @@ Array.prototype.getEleById = function(id) {
     })[0];
 }
 
-Array.prototype.getEleByProp = function(prop,val) {
+Array.prototype.getEleByProp = function(prop, val) {
     return this.filter(function(v) {
-		return v[prop].toString() === val;
+        return v[prop].toString() === val;
     });
 }
 
@@ -38,18 +38,18 @@ Array.prototype.removeEleById = function(id) {
 }
 
 Array.prototype.getIndexOfEle = function(id) {
-    var ind=-1;
-	this.filter(function(v,index) {
-		if(v.id == parseInt(id)){
-			ind= index;
-		}    
-	 return v.id == parseInt(id);
+    var ind = -1;
+    this.filter(function(v, index) {
+        if (v.id == parseInt(id)) {
+            ind = index;
+        }
+        return v.id == parseInt(id);
     });
-	return ind;
+    return ind;
 }
 
 Array.prototype.updateEleById = function(ele) {
-   this[this.getIndexOfEle(ele.id)] = ele;
+    this[this.getIndexOfEle(ele.id)] = ele;
 }
 
 app.use(bodyparser.json());
@@ -62,16 +62,16 @@ app.get('/', function(req, res) {
 //  get/todos
 
 app.get('/todos', function(req, res) {
-	var eles=todos;   
-   debugger;
-   if(req.query.hasOwnProperty('completed')){
-	eles = todos.getEleByProp('completed',req.query.completed);	
-	}
-	 if(req.query.hasOwnProperty('q')){
-		eles = eles.filter(function(elem){
-			return elem.description.indexOf(req.query.q) > -1;
-		});
-	}
+    var eles = todos;
+    debugger;
+    if (req.query.hasOwnProperty('completed')) {
+        eles = todos.getEleByProp('completed', req.query.completed);
+    }
+    if (req.query.hasOwnProperty('q')) {
+        eles = eles.filter(function(elem) {
+            return elem.description.indexOf(req.query.q) > -1;
+        });
+    }
     if (eles && eles.length > 0)
         res.json(eles);
     else
@@ -89,14 +89,19 @@ app.get('/todos/:id', function(req, res) {
 
 // POST todos
 app.post('/todos', function(req, res) {
-    var body = req.body;
-    var item = {
-		'id' : nextItemId++,
-		'description': body.description,
-		'completed': body.completed
-		};
-    todos.push(item);
-    res.json(item.id);
+    /*   var body = req.body;
+       var item = {
+           'id': nextItemId++,
+           'description': body.description,
+           'completed': body.completed
+       };
+       todos.push(item);
+       res.json(item.id);  */
+    db.todo.create(req.body).then(function(todo) {
+        res.json(todo.toJSON());
+    }).catch(function(e) {
+        res.status(400).json(e);
+    });
 });
 
 // DELETE todos
@@ -104,30 +109,33 @@ app.delete('/todos/:id', function(req, res) {
 
     var len = todos.length;
     todos = todos.removeEleById(req.params.id);
-	if(todos.length === len )
-		res.json('item not found');
-	else
-		res.json('item with id '+req.params.id+' is removed');
+    if (todos.length === len)
+        res.json('item not found');
+    else
+        res.json('item with id ' + req.params.id + ' is removed');
 });
 // UPDATE todos
 app.put('/todos/:id', function(req, res) {
 
     var ele = todos.getEleById(req.params.id);
-	if(ele)
-	{
-		var body = req.body;	
-		var ele = {
-			'id' :parseInt(req.params.id),
-			'description': body.description,
-			'completed': body.completed
-		}
-		todos.updateEleById(ele);
-		res.json('item with id '+req.params.id+' is updated');
-	}
-	else
-		res.json('item with id '+req.params.id+' is not found');
+    if (ele) {
+        var body = req.body;
+        var ele = {
+            'id': parseInt(req.params.id),
+            'description': body.description,
+            'completed': body.completed
+        }
+        todos.updateEleById(ele);
+        res.json('item with id ' + req.params.id + ' is updated');
+    } else
+        res.json('item with id ' + req.params.id + ' is not found');
 });
 
-app.listen(PORT, function() {
-    console.log('Express is listening to port ' + PORT);
+db.sequelize.sync({
+    force: true
+}).then(function() {
+    console.log('database is synced');
+    app.listen(PORT, function() {
+        console.log('Express is listening to port ' + PORT);
+    });
 });
