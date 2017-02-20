@@ -63,27 +63,42 @@ app.get('/', function(req, res) {
 
 app.get('/todos', function(req, res) {
     var eles = todos;
-    debugger;
-    if (req.query.hasOwnProperty('completed')) {
-        eles = todos.getEleByProp('completed', req.query.completed);
-    }
-    if (req.query.hasOwnProperty('q')) {
-        eles = eles.filter(function(elem) {
-            return elem.description.indexOf(req.query.q) > -1;
-        });
-    }
-    if (eles && eles.length > 0)
-        res.json(eles);
-    else
-        res.status(404).send();
+    /*   if (req.query.hasOwnProperty('completed')) {
+           eles = todos.getEleByProp('completed', req.query.completed);
+       }
+       if (req.query.hasOwnProperty('q')) {
+           eles = eles.filter(function(elem) {
+               return elem.description.indexOf(req.query.q) > -1;
+           });
+       }
+       if (eles && eles.length > 0)
+           res.json(eles);
+       else
+           res.status(404).send();
+
+       */
+    db.findAll({
+        where {
+
+        }
+    })
 });
 
 app.get('/todos/:id', function(req, res) {
-    var ele = todos.getEleById(req.params.id);
-    if (ele)
-        res.json(ele);
-    else
-        res.status(404).send();
+    //  var ele = todos.getEleById(req.params.id);
+    /*  if (ele)
+          res.json(ele);
+      else
+          res.status(404).send();  */
+
+    db.todo.findById(parseInt(req.params.id)).then(function(todo) {
+        if (todo)
+            res.json(todo.toJSON());
+        else
+            res.status(404).send();
+    }).catch(function(e) {
+        res.status(500).json(e);
+    });
 });
 
 
