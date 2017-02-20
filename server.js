@@ -137,13 +137,28 @@ app.post('/todos', function(req, res) {
 
 // DELETE todos
 app.delete('/todos/:id', function(req, res) {
+    /*
+        var len = todos.length;
+        todos = todos.removeEleById(req.params.id);
+        if (todos.length === len)
+            res.json('item not found');
+        else
+            res.json('item with id ' + req.params.id + ' is removed');
+    */
+    db.todo.destroy({
+        where: {
+            id: req.params.id
+        }
+    }).then(function(deletedRowsCount) {
+        if (deletedRowsCount != 0) {
+            res.json('item with id ' + req.params.id + ' is removed');
+        } else {
+            res.json('item with id ' + req.params.id + ' does not found');
+        }
+    }, function(e) {
+        res.status(500).send();
+    })
 
-    var len = todos.length;
-    todos = todos.removeEleById(req.params.id);
-    if (todos.length === len)
-        res.json('item not found');
-    else
-        res.json('item with id ' + req.params.id + ' is removed');
 });
 // UPDATE todos
 app.put('/todos/:id', function(req, res) {
@@ -163,7 +178,7 @@ app.put('/todos/:id', function(req, res) {
 });
 
 db.sequelize.sync({
-    force: true
+    // force: true
 }).then(function() {
     console.log('database is synced');
     app.listen(PORT, function() {
