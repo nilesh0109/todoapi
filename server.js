@@ -162,19 +162,49 @@ app.delete('/todos/:id', function(req, res) {
 });
 // UPDATE todos
 app.put('/todos/:id', function(req, res) {
-
-    var ele = todos.getEleById(req.params.id);
-    if (ele) {
-        var body = req.body;
-        var ele = {
-            'id': parseInt(req.params.id),
-            'description': body.description,
-            'completed': body.completed
-        }
-        todos.updateEleById(ele);
-        res.json('item with id ' + req.params.id + ' is updated');
-    } else
+    var updateFields = {};
+    var body = req.body;
+    if (body.hasOwnProperty('completed')) {
+        updateFields.completed = req.body.completed;
+    }
+    if (body.hasOwnProperty('description')) {
+        updateFields.description = req.body.description;
+    }
+    db.todo.findById(req.params.id).then(function(todo) {
+        todo.update(updateFields).then(function(rowUpdatedCount) {
+            res.json('item with id ' + req.params.id + ' is updated');
+        }, function(error) {
+            res.status(500).send();
+        });
+    }, function() {
         res.json('item with id ' + req.params.id + ' is not found');
+    });
+    /*
+    db.todo.update(updateFields, {
+        where: {
+            id: req.params.id
+        }
+    }).then(function(updatedRowsCount) {
+        if (updatedRowsCount == 0)
+            res.json('item with id ' + req.params.id + ' is not found');
+        else
+            res.json('item with id ' + req.params.id + ' is updated');
+    }, function(error) {
+        res.status(500).send();
+    }); */
+    /*  var ele = todos.getEleById(req.params.id);
+      if (ele) {
+          var body = req.body;
+          var ele = {
+              'id': parseInt(req.params.id),
+              'description': body.description,
+              'completed': body.completed
+          }
+          todos.updateEleById(ele);
+          res.json('item with id ' + req.params.id + ' is updated');
+      } else
+          res.json('item with id ' + req.params.id + ' is not found');
+          */
 });
 
 db.sequelize.sync({
