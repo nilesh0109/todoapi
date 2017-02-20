@@ -63,6 +63,26 @@ app.get('/', function(req, res) {
 
 app.get('/todos', function(req, res) {
     var eles = todos;
+    var where = {};
+    if (req.query.hasOwnProperty('q')) {
+        where.description = {
+            $like: '%' + req.query.q + '%'
+        }
+    }
+    if (req.query.hasOwnProperty('completed')) {
+        where.completed = req.query.completed === 'true'
+    }
+    db.todo.findAll({
+        where: where
+    }).then(function(todos) {
+
+        res.json(todos);
+        //    todos.forEach(function(todo) {
+        //        todo.toJSON()
+        //    });
+    }).catch(function(e) {
+        res.status(500).json(e);
+    });
     /*   if (req.query.hasOwnProperty('completed')) {
            eles = todos.getEleByProp('completed', req.query.completed);
        }
@@ -77,11 +97,7 @@ app.get('/todos', function(req, res) {
            res.status(404).send();
 
        */
-    db.findAll({
-        where {
 
-        }
-    })
 });
 
 app.get('/todos/:id', function(req, res) {
