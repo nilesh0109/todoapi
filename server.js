@@ -207,8 +207,19 @@ app.put('/todos/:id', function(req, res) {
           */
 });
 
+/* ---------------------- users database ----------------------------------- */
+
+app.post('/users', function(req, res) {
+
+    db.user.create(req.body).then(function(data) {
+        res.json(data);
+    }, function(error) {
+        res.status(400).json(error);
+    });
+});
+
 db.sequelize.sync({
-    // force: true
+    //  force: true
 }).then(function() {
     console.log('database is synced');
     app.listen(PORT, function() {
