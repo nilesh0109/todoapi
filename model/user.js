@@ -1,7 +1,7 @@
 var bcrypt = require('bcrypt');
 var _ = require('underscore');
 module.exports = function(sequelize, DataTypes) {
-    return sequelize.define('user', {
+    var user = sequelize.define('user', {
         email: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -38,6 +38,34 @@ module.exports = function(sequelize, DataTypes) {
                     user.email = user.email.toLowerCase().trim();
             }
         },
+        classMethods: {
+            authenticate: function(body) {
+                return new Promise(function(resolve, reject) {
+                    if (typeof body.email !== 'string' || typeof body.password !== 'string')
+                        return reject();
+                    else {
+                        user.findOne({
+                            where: {
+                                email: body.email
+                            }
+                        }).then(function(user) {
+                            if (user) {
+                                if (bcrypt.compareSync(body.password, user.get('hashedPassword'))) {
+                                    return resolve(user);
+                                } else {
+                                    return reject();
+                                }
+                            } else {
+                                return reject();
+                            }
+                        }, function(error) {
+                            return reject();
+                        })
+                    }
+                });
+
+            }
+        },
         instanceMethods: {
 
             getPublicJSON: function() {
@@ -46,4 +74,5 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     });
+    return user;
 }

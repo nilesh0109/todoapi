@@ -1,6 +1,8 @@
 var express = require('express');
 var bodyparser = require('body-parser');
 var db = require('./db.js');
+var _ = require('underscore');
+var bcrypt = require('bcrypt');
 var app = express();
 var PORT = process.env.PORT || 3002;
 var nextItemId = 1;
@@ -210,16 +212,25 @@ app.put('/todos/:id', function(req, res) {
 /* ---------------------- users database ----------------------------------- */
 
 app.post('/users', function(req, res) {
-
-    db.user.create(req.body).then(function(data) {
+    var body = _.pick(req.body, "email", "password");
+    db.user.create(body).then(function(data) {
         res.json(data.getPublicJSON());
     }, function(error) {
         res.status(400).json(error);
     });
 });
 
+app.post('/users/login', function(req, res) {
+    var body = _.pick(req.body, "email", "password");
+    db.user.authenticate(body).then(function(user) {
+        res.json(user.getPublicJSON());
+    }, function() {
+        res.status(401).send();
+    });
+});
+
 db.sequelize.sync({
-    //force: true
+    force: true
 }).then(function() {
     console.log('database is synced');
     app.listen(PORT, function() {
